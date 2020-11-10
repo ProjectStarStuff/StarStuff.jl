@@ -11,7 +11,6 @@ using IterTools
 using Measurements
 using LinearAlgebra
 
-
 function constant(x::Array{T};
     direction::Array = [0.0, 0.0, 6.0e-10]) where {T <: Number}
     out = vec(direction)

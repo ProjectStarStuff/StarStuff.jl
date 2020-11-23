@@ -192,6 +192,7 @@ function initParticles(particleTypes, energies, rStart, particleAim, gpFrac, bfi
     return particleTree
 
 end # initParticles
+export initParticles
 
 # TODO: generate readable lookup tree if inputs are given as dictionaries
 

@@ -1,29 +1,10 @@
 module PointNshoot
 
-using DataFrames
-using CSV
-using Reexport
-using Statistics
-using Logging: global_logger
-using TerminalLoggers: TerminalLogger
-using TerminalMenus
-using Interact
 using Blink
-
-
-#using FITSIO
+using Interact
 
 using StarStuff
-
-
-datapath = joinpath("data","pointNshoot")
-plotspath = joinpath("plots","pointNshoot")
-if !isdir(datapath)
-    mkdir(datapath)
-end
-if !isdir(plotspath)
-    mkdir(plotspath)
-end
+using GLMakie
 
 """
         singleParticleTree(particle::ParticleID,energy::Quantity,r0::Quantity,direction::Vector,gpFrac::Float64)
@@ -37,7 +18,7 @@ function singleParticleTree(particle::ParticleID,energy::Quantity,r0::Quantity,d
     bfield = Bfield.model[:jansson2012m]
 
     # generate initial particle tree
-    initialPT = initParticles(
+    initialPT = StarStuff.initParticles(
         Vector([particle]),
         Vector([upreferred(energy)]),
         Vector([upreferred(r0)]),
@@ -66,11 +47,11 @@ function singleParticleTree(particle::ParticleID,energy::Quantity,r0::Quantity,d
         println(typeof(initialPT[i,1]))
         println(typeof(prob))
         # Solve problem using time step specified in Timescale node
-        solution = solve(prob, FunctionMap(), dt = initialPT.nodes[i].dt, progress = true)
+        solution = solve(prob, FunctionMap(), dt = initialPT.nodes[i].dt, progress = false)
         println("test $(i) end")
         # Construct a new Timescale out of the solution and add to solution particle tree
         solTS = construct(Timescale,solution.u,Float64[],solution.t,initialPT.nodes[i].dt)
-        if solPT == nothing
+        if solPT === nothing
             solPT = construct(ParticleTree, Vector([solTS]))
         else
             add_node!(solPT,solTS)
@@ -101,7 +82,7 @@ function best_units(x::Float64)
     return units
 end
 
-function pnsScene!(scene::Scene,pt::ParticleTree,filename::String)
+function pnsScene!(scene::Scene,pt::ParticleTree;filename::Union{String,Nothing}=nothing)
     # Extract coordinates from particle tree
     times, traj = getParticleTrajectory(pt,1,1,1)
     # println("dt = ", times[51]-times[50])
@@ -130,9 +111,6 @@ function pnsScene!(scene::Scene,pt::ParticleTree,filename::String)
     bounds = FRect3D([mincoord,mincoord,mincoord],[maxcoord,maxcoord,maxcoord])
 
     # 3D SCENE
-
-
-
     makelabels(xs,tickunits) = ["$(@sprintf("%.2e",ustrip(tickunits,x*u"m")))" for x in xs]	
     maxticks = collect(LinRange(mincoord,0.0,5))
     append!(maxticks,collect(LinRange(0.0,maxcoord,5)[2:end]))
@@ -150,31 +128,85 @@ function pnsScene!(scene::Scene,pt::ParticleTree,filename::String)
     return scene
 end
 
-
 """
-        pns()
+    function particlepicker()
 
-Run for application that will fire a single input particle
+Widget to select a particle. Returns a ParticleID
 """
-function pns()
+function particlepicker()
     el = spinbox(label="Electrons"; value=0)
     pr = spinbox(label="Protons"; value=0)
     nu = spinbox(label="Neutrons"; value=0)
-    part_def = Interact.hbox(el,pr,nu)
-    run_button = Interact.button("Run!")
-    line1 = hline()
-    ui = Interact.vbox(part_def,line1,run_button)
+    output = Interact.@map(ParticleID(&el,&pr,&nu))
+    wdg = Widget(["e"=>el,"p"=>pr,"n"=>nu],output=output)
+    @layout! wdg Interact.hbox(el,pr,nu)
+end
+
+
+"""
+        run()
+
+Run PointNshoot script
+"""
+function run()
+    GLMakie.activate!()
+
+    s = Observable{Any}(Scene())
+
+    sine_button = Interact.button("Sine plot")
+    cos_button = Interact.button("Cos plot")
+    spi_button = Interact.button("Spiral plot")
+    clear_button = Interact.button("Clear plots")
+
+    buttons = Interact.vbox(sine_button,cos_button,spi_button,clear_button)
+
+
+    function sineplot!(a::Int64,s::Scene)
+        t = collect(0:0.1:10)
+        # x = cos.(2*π*t)
+        y = sin.(2*π*t)
+        # z = t
+        println("Sin plot")
+        lines!(s,t,y)
+        update!(s)
+    end
+
+    function cosplot!(a::Int64,s::Scene)
+        t = collect(0:0.1:10)
+        x = cos.(2*π*t)
+        # y = sin.(2*π*t)
+        # z = t
+        println("Cos plot")
+        lines!(s,t,x)
+        update!(s)
+    end
+
+    function spiplot!(a::Int64,s::Scene)
+        t = collect(0:0.1:10)
+        x = cos.(2*π*t)
+        y = sin.(2*π*t)
+        z = t
+        println("Spiral plot")
+        lines!(s,x,y,z)
+        update!(s)
+    end
+
+    function clearplot!(a::Int64,s::Scene)
+        clear!(s)
+    end
+
+
+
+    map!(sineplot!,s,sine_button,s[])
+    map!(cosplot!,s,cos_button,s[])
+    map!(spiplot!,s,spi_button,s[])
+    map!(clearplot!,s,clear_button,s[])
+
+    ui = dom"div"(buttons)
     w  = Window()
     body!(w, ui)
-    button_test = Interact.button("Test")
-    w2 = Window()
-    body!(w2, button_test)
-    # global_logger(TerminalLogger())
-    # # Set up scene
-    # # scene = Scene()
-    # # Location to save CSV output
-    # # filename = joinpath(datapath,"20201026_proton_1TeV_Jansson.csv")
 
+    return s[]
     # # REQUEST SIMULATION PARAMETERS
     # # get number of particles
     # nparticles = get_until_correct("Number of particles: ",Int)
@@ -232,10 +264,9 @@ function pns()
 
 end
 
-export pns
+export run
 
 end # PointNshoot
 
 import .PointNshoot
-
-PointNshoot.pns()
+PointNshoot.run()

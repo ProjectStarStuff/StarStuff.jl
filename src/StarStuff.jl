@@ -14,6 +14,9 @@ module StarStuff
     @reexport using GeometryBasics
     @reexport using IterTools
     @reexport using Measurements
+    @reexport using CSV
+    @reexport using Statistics
+    @reexport using DataFrames
 
     @reexport using Makie
     @reexport using AbstractPlotting
@@ -27,4 +30,7 @@ module StarStuff
     include("Bfield.jl")
     include("RelativisticIntegrator.jl")
     include("GUI.jl")
+    
+    # scripts
+    # include("PointNshoot.jl")
 end # StarStuff

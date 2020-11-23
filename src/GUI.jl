@@ -118,10 +118,10 @@ end
 Removes everything from scene except axes
 """
 function clear!(scene::Scene) 
-    if length(scene.plots) > 2
+    if length(scene.plots) > 1
         delete!(scene,scene.plots[end])		
         clear!(scene)
-    elseif length(scene.plots) == 2
+    elseif length(scene.plots) == 1
         delete!(scene,scene.plots[end])		
     end
 end

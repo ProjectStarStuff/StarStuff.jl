@@ -1,9 +1,13 @@
+
 module PointNshoot
+include("StarStuff.jl")
+
+using .StarStuff
+
 
 using Blink
 using Interact
 
-using StarStuff
 using GLMakie
 
 """
@@ -124,8 +128,46 @@ function pnsScene!(scene::Scene,pt::ParticleTree;filename::Union{String,Nothing}
     xlabel!(scene, "X ($axesunits)")
     ylabel!(scene, "Y ($axesunits)")
     zlabel!(scene, "Z ($axesunits)")
+    update!(scene)
 
     return scene
+end
+
+function sineplot!(a::Int64,s::Scene)
+    cam2d!(s)
+    t = collect(0:0.1:10)
+    # x = cos.(2*π*t)
+    y = sin.(2*π*t)
+    # z = t
+    println("Sin plot")
+    lines!(s,t,y)
+    update!(s)
+end
+
+function cosplot!(a::Int64,s::Scene)
+    cam2d!(s)
+    t = collect(0:0.1:10)
+    x = cos.(2*π*t)
+    # y = sin.(2*π*t)
+    # z = t
+    println("Cos plot")
+    lines!(s,t,x)
+    update!(s)
+end
+
+function spiplot!(a::Int64,s::Scene)
+    cam3d!(s)
+    t = collect(0:0.1:10)
+    x = cos.(2*π*t)
+    y = sin.(2*π*t)
+    z = t
+    println("Spiral plot")
+    lines!(s,x,y,z)
+    update!(s)
+end
+
+function clearplot!(a::Int64,s::Scene)
+    clear!(s)
 end
 
 """
@@ -137,11 +179,10 @@ function particlepicker()
     el = spinbox(label="Electrons"; value=0)
     pr = spinbox(label="Protons"; value=0)
     nu = spinbox(label="Neutrons"; value=0)
-    output = Interact.@map(ParticleID(&el,&pr,&nu))
+    output = Interact.@map(ParticleID(&pr,&nu,&el))
     wdg = Widget(["e"=>el,"p"=>pr,"n"=>nu],output=output)
-    @layout! wdg Interact.hbox(el,pr,nu)
+    @layout! wdg Interact.hbox(pr,nu,el)
 end
-
 
 """
         run()
@@ -151,60 +192,98 @@ Run PointNshoot script
 function run()
     GLMakie.activate!()
 
-    s = Observable{Any}(Scene())
+    s = Observable{Any}(Scene()) # scene output
+    pt = Observable{Any}(nothing) # stored particles
+    pid = Observable{Any}(nothing)
 
-    sine_button = Interact.button("Sine plot")
-    cos_button = Interact.button("Cos plot")
-    spi_button = Interact.button("Spiral plot")
-    clear_button = Interact.button("Clear plots")
+    # sine_button = Interact.button("Sine plot")
+    # cos_button = Interact.button("Cos plot")
+    # spi_button = Interact.button("Spiral plot")
+    # clear_button = Interact.button("Clear plots")
 
-    buttons = Interact.vbox(sine_button,cos_button,spi_button,clear_button)
+    # map!(sineplot!,s,sine_button,s[])
+    # map!(cosplot!,s,cos_button,s[])
+    # map!(spiplot!,s,spi_button,s[])
+    # map!(clearplot!,s,clear_button,s[])
 
+    # *** PARTICLE ID INPUT ***
+    part_text = Interact.latex("\\text{\\textbf{Particle components}}")
+    el = Interact.spinbox(label="Electrons"; value=0,step="any")
+    pr = Interact.spinbox(label="Protons"; value=0)
+    nu = Interact.spinbox(label="Neutrons"; value=0)
+    part_components = Interact.hbox(pr,nu,el)
+    
+    part_display = Interact.vbox(part_text,part_components)
 
-    function sineplot!(a::Int64,s::Scene)
-        t = collect(0:0.1:10)
-        # x = cos.(2*π*t)
-        y = sin.(2*π*t)
-        # z = t
-        println("Sin plot")
-        lines!(s,t,y)
-        update!(s)
-    end
-
-    function cosplot!(a::Int64,s::Scene)
-        t = collect(0:0.1:10)
-        x = cos.(2*π*t)
-        # y = sin.(2*π*t)
-        # z = t
-        println("Cos plot")
-        lines!(s,t,x)
-        update!(s)
-    end
-
-    function spiplot!(a::Int64,s::Scene)
-        t = collect(0:0.1:10)
-        x = cos.(2*π*t)
-        y = sin.(2*π*t)
-        z = t
-        println("Spiral plot")
-        lines!(s,x,y,z)
-        update!(s)
-    end
-
-    function clearplot!(a::Int64,s::Scene)
-        clear!(s)
-    end
+    # *** POSITION INPUT ***
 
 
+    dist_names = ["kpc","pc","km","m","cm"]
+    dist_objects = [1.0u"kpc",1.0u"pc",1.0u"km",1.0u"m",1.0u"cm",]
+    dist_dict = OrderedDict(zip(dist_names,dist_objects))
+    dist_wdg = Interact.dropdown(dist_names)
+    # Interact.@on println(&unit_wdg)
+    dist_disp = Interact.@map Interact.latex("\\text{$(&dist_wdg)}")
 
-    map!(sineplot!,s,sine_button,s[])
-    map!(cosplot!,s,cos_button,s[])
-    map!(spiplot!,s,spi_button,s[])
-    map!(clearplot!,s,clear_button,s[])
+    xstart = Interact.spinbox(label="X: "; value = -8.5)
+    xval = Interact.@map &xstart*dist_dict[&dist_wdg]
+    xdisp = Interact.hbox(xstart)
+    ystart = Interact.spinbox(label="Y: "; value = 0.0)
+    yval = Interact.@map &ystart*dist_dict[&dist_wdg]
+    ydisp = Interact.hbox(ystart)
+    zstart = Interact.spinbox(label="Z: "; value = 0.0)
+    zval = Interact.@map &zstart*dist_dict[&dist_wdg]
+    zdisp = Interact.hbox(zstart)
 
-    ui = dom"div"(buttons)
+    dist_text = Interact.hbox(latex("\\text{\\textbf{Initial Position}(}"),dist_wdg,latex("\\text{)}"))
+    dist_display = Interact.vbox(dist_text,xdisp,ydisp,zdisp)
+
+    # *** ENERGY INPUT ***
+    enu_names = ["GeV","TeV","MeV","keV"]
+    enu_objects = [1.0u"GeV",1.0u"TeV",1.0u"MeV",1.0u"keV"]
+    enu_dict = OrderedDict(zip(enu_names,enu_objects))
+    enu_wdg = Interact.dropdown(enu_names)
+    enu_disp = Interact.@map Interact.latex("\\text{$(&enu_wdg)}")
+
+    enstart = Interact.spinbox(value = 0.0)
+    enval = Interact.@map &enstart*enu_dict[&enu_wdg]
+    en_disp = Interact.hbox(enstart,enu_disp)
+
+    energy_display = Interact.hbox(latex("\\text{\\textbf{Energy = }}"),enstart,enu_wdg)
+
+    # *** DIRECTION INPUT ***
+    aim_text = Interact.latex("\\text{\\textbf{Initial Direction}}")
+    xaim = Interact.spinbox(label="X: ",value = 1.0)
+    yaim = Interact.spinbox(label="Y: ",value = 0.0)
+    zaim = Interact.spinbox(label="Z: ",value = 0.0)
+    aim_val = Interact.@map normalize(Vector([&xaim,&yaim,&zaim]))
+
+    aim_display = Interact.vbox(aim_text,xaim,yaim,zaim)
+
+    pos_aim = Interact.hbox(dist_display,aim_display)
+
+    # *** TIME INPUT***
+    dtmodes = ["MANUAL","AUTOMATIC"]
+    testa = Observable(dtmodes)
+    test = Widgets.togglebuttons(testa)
+    # println(test[])
+    # testb = ["AUTOMATIC","MANUAL"]
+    # testc = Interact.@map &test["Time Step:"] ? "AUTOMATIC" : "MANUAL"
+    testdisp = Interact.hbox(test)
+
+    Interact.@on println(&test)
+    # *** MAKE DISPLAY ***
+    ui = Interact.vbox(
+        part_display,
+        Interact.hline(),
+        energy_display,
+        Interact.hline(),
+        pos_aim,
+        Interact.hline(),
+        testdisp
+        )
     w  = Window()
-    body!(w, ui)
+    body!(w,ui)
 
     return s[]
     # # REQUEST SIMULATION PARAMETERS

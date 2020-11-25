@@ -63,9 +63,8 @@ export Coords, Species, Snapshot, Timescale, ParticleTree
 
 ###############################################################################
 # FUNCTIONS TO HELP GENERATE PARTICLE TREES
-
 """
-    single_particletree(particletype::T, energy::U, xyz::V, aim::W, dt::X) where {T<:ParticleID,U<:typeof(1.0u"J"),V<:typeof(Vector([1.0,1.0,1.0]*u"m")),W<:typeof(Vector([1.0,0.0,0.0])),X<:typeof(1.0u"s")}
+    ParticleTree(particletype::ParticleID,energy::Quantity,xyz::Vector{T},aim::Vector,dt::Quantity) where {T<:Quantity}    
 
 Return a ParticleTree with a single particle in it.
 
@@ -74,20 +73,39 @@ Input:
 - energy: initial particle energies (must have units ∈ Unitful.Energy)
 - xyz: starting Cartesian coordinates with Earth along the -x axis (must have units ∈ Unitful.Distance)
 - aim: Vector with length=3 with initial direction of particle trajectory. 
-- dt: initial time step for simulation
+- dt: initial time step for simulation (must have units ∈ Unitful.Time)
 - bfield: Function that returns the value of the galactic magnetic field when given spatial coorinates
 
 Returns:
         ParticleTree
 """
-function single_particletree(particletype::T, energy::U, xyz::V, aim::W, dt::X) where {T<:ParticleID,U<:typeof(1.0u"J"),V<:typeof(Vector([1.0,1.0,1.0]*u"m")),W<:typeof(Vector([1.0,0.0,0.0])),X<:typeof(1.0u"s")}
+function ParticleTree(particletype::ParticleID,energy::Quantity,xyz::Vector{T},aim::Vector,dt::Quantity) where {T<:Quantity}
+    @assert typeof(energy) <: Unitful.Energy "Need to be units of energy"
+    @assert typeof(xyz[1]) <: Unitful.Length "Need to be units of length"
+    @assert typeof(dt)     <: Unitful.Time   "Need to be units of time"
+    @assert length(xyz) == 3                 "Coordinates require 3 spatial dimensions"
+    @assert length(aim) == 3                 "Direction requires 3 spatial dimensions"
+
+    energy_in = usistrip(Float64(energy))
+    xyz_in = Float64.(xyz)
+    xyz_in = usistrip.(xyz_in)
+    aim_in = Float64.(aim)
+    dt_in = usistrip(Float64(dt))
+
+
+    ParticleTree(particletype,energy_in,xyz_in,aim_in,dt_in)
+end
+
+
+
+function ParticleTree(particletype::ParticleID, energy::Float64, xyz::Vector{Float64}, aim::Vector{Float64}, dt::Float64)
 
     # Get ParticleTree leaf type
     leafType = typeof(Coords(ArrayPartition([1.,2.,3.],[4.,5.,6.])))
 
     # Ensure that the initial direction is normalized for subsequent
     # momentum scaling.
-    particleAim = map(x->normalize(x),aim_vec)
+    particleAim = normalize(aim)
 
     # starts at time 0.0
     timeInit = Vector([0.0])
@@ -95,11 +113,10 @@ function single_particletree(particletype::T, energy::U, xyz::V, aim::W, dt::X) 
     particleTree = nothing
 
     # first make Coords
-    pos = usistrip.(xyz)
     dir = normalize(aim)
-    pmag = usistrip(momentum(energy,particletype))
+    pmag = momentum_si(energy,particletype)
     mom = pmag*dir
-    coords = Coords(ArrayPartition(pos,mom))
+    coords = Coords(ArrayPartition(xyz,mom))
 
     # stick Coords in a Species
     sp = construct(Species,Vector([coords]),Float64[],particletype)
@@ -109,16 +126,52 @@ function single_particletree(particletype::T, energy::U, xyz::V, aim::W, dt::X) 
 
     # stick Snapshot in a Timescale
     time_init = Vector([0.0])
-    dt_strip = usistrip(dt)
-    scale = construct(Timescale,Vector([snap]),Float64[],time_init,dt_strip)
+    scale = construct(Timescale,Vector([snap]),Float64[],time_init,dt)
 
     # stick Timescale in a ParticleTree
     particletree = construct(ParticleTree,Vector([scale]))
 
     return particletree
 
-end # single_particletree
-export single_particletree
+end # ParticleTree
+
+
+function __push!(pt::ParticleTree,c::Union{Timescale,Snapshot,Species,Coords},I::Vector{T}) where {T<:Int}
+    @assert length(I) < 5 "Something went wrong"
+    test_type = length(I) == 1 ? typeof(pt.nodes[end]) : typeof(pt[I...])
+    if typeof(c) == test_type
+        if length(I) == 1
+            add_node!(pt,c)
+        else
+            add_node!(pt,c,I[1:end-1]...)
+        end
+    else
+        if length(I) == 1
+            push!(I,length(pt.nodes[end].nodes))
+        else
+            push!(I,length(pt[I...].nodes))
+        end
+        __push!(pt,c,I)
+    end
+
+end
+
+"""
+    push!(pt::ParticleTree,val::Union{ParticleTree,Timescale,Snapshot,Species,Coords})
+
+Push contents of val to last container of same type.
+"""
+function Base.push!(pt::ParticleTree,val::Union{ParticleTree,Timescale,Snapshot,Species,Coords})
+    if isa(val,ParticleTree)
+        for ts in val.nodes
+            add_node!(pt,ts)
+        end
+    else
+        I = Vector([length(pt.nodes)])
+        __push!(pt,val,I)
+    end
+end
+
 """
     initParticles(particleTypes, energies, rStart, particleAim, gpFrac, bfield)
 
@@ -161,7 +214,7 @@ function initParticles(particleTypes, energies, rStart, particleAim, gpFrac, bfi
                 for d in particleAim
                     pVec = usistrip(pMag)*d 
                     coords = Coords(ArrayPartition(rVec,pVec))	
-                    if coordsVec == nothing
+                    if coordsVec === nothing
                         coordsVec = Vector([coords]) 
                     else
                         push!(coordsVec,coords) 
@@ -255,7 +308,7 @@ Species.
 function getSpeciesIndices(pt::ParticleTree)
     out = nothing
     for species in LevelIter(3,pt)
-        if out == nothing
+        if out === nothing
             out = Vector([species[1].end_idxs])
         else
             push!(out,species[1].end_idxs)

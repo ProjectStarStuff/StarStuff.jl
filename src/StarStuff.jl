@@ -17,6 +17,7 @@ module StarStuff
     @reexport using CSV
     @reexport using Statistics
     @reexport using DataFrames
+    @reexport using DataStructures
 
     @reexport using Makie
     @reexport using AbstractPlotting

@@ -62,6 +62,33 @@ export Coords, Species, Snapshot, Timescale, ParticleTree
 # END PARTICLE TREE
 
 ###############################################################################
+"""
+    ParticleTree()
+
+Make an empty ParticleTree
+"""
+function ParticleTree()
+    # Get ParticleTree leaf type
+    coord = Coords(ArrayPartition([1.,2.,3.],[4.,5.,6.]))
+    emptycoords = typeof(coord)[]
+
+    # stick Coords in a Species
+    sp = construct(Species,emptycoords,Float64[],ParticleID(0,0,0))
+    emptysp = typeof(sp)[]
+
+    # stick Species in a Snapshot
+    snap = construct(Snapshot,emptysp)
+    emptysnap = typeof(snap)[]
+
+    # stick Snapshot in a Timescale
+    time_init = Float64[]
+    dt = -1.0
+    scale = construct(Timescale,emptysnap,Float64[],time_init,dt)
+    emptyscale = typeof(scale)[]
+    # stick Timescale in a ParticleTree
+    particletree = construct(ParticleTree,emptyscale)
+end
+
 # FUNCTIONS TO HELP GENERATE PARTICLE TREES
 """
     ParticleTree(particletype::ParticleID,energy::Quantity,xyz::Vector{T},aim::Vector,dt::Quantity) where {T<:Quantity}    

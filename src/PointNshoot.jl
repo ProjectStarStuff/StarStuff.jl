@@ -212,12 +212,10 @@ function run()
     pr = Interact.spinbox(label="Protons"; value=0)
     nu = Interact.spinbox(label="Neutrons"; value=0)
     part_components = Interact.hbox(pr,nu,el)
-    
+
     part_display = Interact.vbox(part_text,part_components)
 
     # *** POSITION INPUT ***
-
-
     dist_names = ["kpc","pc","km","m","cm"]
     dist_objects = [1.0u"kpc",1.0u"pc",1.0u"km",1.0u"m",1.0u"cm",]
     dist_dict = OrderedDict(zip(dist_names,dist_objects))
@@ -261,26 +259,75 @@ function run()
     aim_display = Interact.vbox(aim_text,xaim,yaim,zaim)
 
     pos_aim = Interact.hbox(dist_display,aim_display)
-
+ 
     # *** TIME INPUT***
-    dtmodes = ["MANUAL","AUTOMATIC"]
-    testa = Observable(dtmodes)
-    test = Widgets.togglebuttons(testa)
-    # println(test[])
-    # testb = ["AUTOMATIC","MANUAL"]
-    # testc = Interact.@map &test["Time Step:"] ? "AUTOMATIC" : "MANUAL"
-    testdisp = Interact.hbox(test)
 
-    Interact.@on println(&test)
+    ## Manual timestep
+    # make dictionary for time and dt units
+    timeu_names   = ["sec","min","hr","day","yr","kyr","Myr"]
+    timeu_objects = [1.0u"s",1.0u"minute",1.0u"hr",1.0u"d",1.0u"yr",1.0u"kyr",1.0u"Myr"]
+    timeu_dict    = OrderedDict(zip(timeu_names,timeu_objects))
+
+    # make time and dt unit widgets
+    timeu_wdg = Interact.dropdown(timeu_names)
+    dtu_wdg   = Interact.dropdown(timeu_names)
+
+    # make numerical input widgets for time and dt
+    time_num = Interact.spinbox(label = "Duration:",value = 0.0)
+    dt_num   = Interact.spinbox(label = "Time step:",value = 0.0)
+
+    # bind time and dt widget values into quantities
+    time_val = Interact.@map &time_num*timeu_dict[&timeu_wdg]
+    dt_val   = Interact.@map &dt_num*timeu_dict[&dtu_wdg]
+
+    # join number and unit widgets together for display
+    time_disp = Interact.hbox(time_num,timeu_wdg)
+    dt_disp = Interact.hbox(dt_num,dtu_wdg)
+
+    # join time and dt widgets together
+    mantime_disp = Interact.vbox(time_disp,dt_disp)
+
+    ## Automatic timestep
+    # get the field value at the current location
+
+    autotime_disp = Interact.latex("\\text{Not yet implemented...}")
+
+
+    ## Choose between time modes
+    # make dictionary of different time modes
+    timemodes_list = ["MANUAL","AUTOMATIC"]
+    timemodes_objects = [mantime_disp,autotime_disp]
+    timemodes_dict = OrderedDict(zip(timemodes_list,timemodes_objects))
+
+    # make toggle widget for different time modes
+    timemodes_wdg = Widgets.togglebuttons(timemodes_list)
+
+    # make observable for proper time display
+    timemodes_disp = Interact.@map timemodes_dict[&timemodes_wdg]
+
+    # join toggle widget and time input
+    time_text = Interact.latex("\\text{\\textbf{Time settings}}")
+    time_section = Interact.@map Interact.vbox(time_text,timemodes_wdg,&timemodes_disp)
+
+    ## *** Construct particle
+    pt_obj = Observable(ParticleTree())
+    clearpt_button = Interact.button("Clear particles")
+    addpt_button   = Interact.button("Add particle")
+    pt_buttons = Interact.hbox(pad(1em,addpt_button),pad(1em,clearpt_button))
+
+    # TODO: add particle whenever "addpt_button" is pressed
+
     # *** MAKE DISPLAY ***
-    ui = Interact.vbox(
+    ui = dom"div"(
         part_display,
         Interact.hline(),
         energy_display,
         Interact.hline(),
         pos_aim,
         Interact.hline(),
-        testdisp
+        time_section,
+        Interact.hline(),
+        pt_buttons
         )
     w  = Window()
     body!(w,ui)

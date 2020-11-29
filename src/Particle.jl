@@ -3,7 +3,6 @@ Associated with various objects that contain constant particle properties
 """
 abstract type Particle end
 
-
 """
 ID cosmic ray by number of protons, neutrons, and electrons
 """

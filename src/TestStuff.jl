@@ -1,18 +1,38 @@
 module TestStuff
-include("StarStuff.jl")
 
+include("StarStuff.jl")
 using .StarStuff
+
 
 function run()
 
-    test = ParticleTree()
-    println(length(test.nodes))
-    push!(test,ParticleTree())
-    println(length(test.nodes))
+
+    part = energy_wdg()
+
+    Interact.@on begin
+        println(&part)
+    end
+    w = Window()
+    ui = dom"div"(
+        part
+    )
+    body!(w,ui)
+
+
+    # test = ParticleTree()
+    # println(length(test.nodes))
+    # push!(test,ParticleTree())
+    # println(length(test.nodes))
     # # parameters for push! test
     # el = ParticleID(0,0,1)
     # en = upreferred(1.0u"GeV")
     # pos = Vector([-8.5,0.0,0.0]*u"kpc")
+    # dir = Vector([1.0,0.0,0.0])
+    # dt = 1.0u"s"
+
+    # elpt = ParticleTree(el,en,pos,dir,dt)
+    # push!(test,elpt)
+    # println(elpt)
     # aim2 = Vector([0.0,1.0,0.0])
     # aim2 = normalize(aim2)
     # pos2 = usistrip.(pos)

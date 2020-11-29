@@ -156,7 +156,7 @@ end
 
 Opens particle selector widget and stores to input particle tree upon exit.
 """
-function particle_selector_wdg!(i::Int64,pt::ParticleTree)
+function particle_selector_wdg!(pt::ParticleTree)
     # *** PARTICLE ID INPUT ***
     part_text = Interact.latex("\\text{\\textbf{Particle components}}")
     el = Interact.spinbox(label="Electrons"; value=0,step="any")
@@ -274,7 +274,7 @@ function particle_selector_wdg!(i::Int64,pt::ParticleTree)
     Interact.@on begin
         &addpt_button
         newpt = ParticleTree(particle_val[],energy_val[],position_val[],aim_val[],dt_val[])
-        push!(pt_obj,newpt)
+        push!(pt_obj[],newpt)
     end
 
     # ParticleTree control buttons
@@ -289,7 +289,7 @@ function particle_selector_wdg!(i::Int64,pt::ParticleTree)
     close_button = Interact.button("Save & close")
     Interact.@on begin
         &close_button
-        pt = pt_obj[]
+        push!(pt,pt_obj[])
         close(w)
     end
 
@@ -323,12 +323,12 @@ function run()
     pt = Observable(ParticleTree())
     newpt = Observable(ParticleTree())
 
-    println("*** TEST 9 ***")
-    w = Window()
     add_particle_button = Interact.button("Add particle(s)")
-    map!(particle_selector_wdg!,newpt,add_particle_button,newpt[])
+    Interact.@on begin
+        &add_particle_button
+        particle_selector_wdg!(newpt[])
+    end
 
-    println("*** TEST 10 ***")
     Interact.@on push!(pt[],&newpt)
 
     Interact.@on begin
@@ -337,14 +337,22 @@ function run()
     end
     update_plot_button = Interact.button("Update plot")
 
-    println("*** TEST 11 ***")
+    test_button = Interact.button("Test")
+
+    Interact.@on begin
+        &test_button
+        println(newpt[])
+        println("****************************")
+        println(pt[])
+    end
+
     ui = dom"div"(
         add_particle_button,
-        update_plot_button
+        update_plot_button,
+        test_button
     )
-
+    w = Window()
     body!(w,ui)
-    println("*** TEST 12 ***")
     return s[]
     # # REQUEST SIMULATION PARAMETERS
     # # get number of particles

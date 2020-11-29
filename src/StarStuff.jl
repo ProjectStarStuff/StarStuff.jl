@@ -3,9 +3,11 @@ module StarStuff
 
     # external dependencies
     @reexport using Printf
+
     @reexport using Unitful
     @reexport using UnitfulAstro
     @reexport using UnitfulAtomic
+
     @reexport using LinearAlgebra
     @reexport using Random
     @reexport using Distributions
@@ -22,6 +24,9 @@ module StarStuff
     @reexport using Makie
     @reexport using AbstractPlotting
     @reexport using AbstractPlotting.MakieLayout
+
+    @reexport using Interact
+    @reexport using Blink
 
     include("Particle.jl")
     include("Kinematics.jl")    

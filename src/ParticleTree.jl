@@ -190,9 +190,13 @@ Push contents of val to last container of same type.
 """
 function Base.push!(pt::ParticleTree,val::Union{ParticleTree,Timescale,Snapshot,Species,Coords})
     if isa(val,ParticleTree)
-        for ts in val.nodes
-            add_node!(pt,ts)
-        end
+        if length(pt.nodes) == 0
+            pt = val
+        else
+            for ts in val.nodes
+                add_node!(pt,ts)
+            end
+        end 
     else
         I = Vector([length(pt.nodes)])
         __push!(pt,val,I)

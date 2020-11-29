@@ -6,8 +6,9 @@ using .StarStuff
 function run()
 
     test = ParticleTree()
-    print_human_readable(test)
-    println(test)
+    println(length(test.nodes))
+    push!(test,ParticleTree())
+    println(length(test.nodes))
     # # parameters for push! test
     # el = ParticleID(0,0,1)
     # en = upreferred(1.0u"GeV")

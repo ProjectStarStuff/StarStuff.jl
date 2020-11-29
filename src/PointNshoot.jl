@@ -133,39 +133,6 @@ function pnsScene!(scene::Scene,pt::ParticleTree;filename::Union{String,Nothing}
     return scene
 end
 
-function sineplot!(a::Int64,s::Scene)
-    cam2d!(s)
-    t = collect(0:0.1:10)
-    # x = cos.(2*π*t)
-    y = sin.(2*π*t)
-    # z = t
-    println("Sin plot")
-    lines!(s,t,y)
-    update!(s)
-end
-
-function cosplot!(a::Int64,s::Scene)
-    cam2d!(s)
-    t = collect(0:0.1:10)
-    x = cos.(2*π*t)
-    # y = sin.(2*π*t)
-    # z = t
-    println("Cos plot")
-    lines!(s,t,x)
-    update!(s)
-end
-
-function spiplot!(a::Int64,s::Scene)
-    cam3d!(s)
-    t = collect(0:0.1:10)
-    x = cos.(2*π*t)
-    y = sin.(2*π*t)
-    z = t
-    println("Spiral plot")
-    lines!(s,x,y,z)
-    update!(s)
-end
-
 function clearplot!(a::Int64,s::Scene)
     clear!(s)
 end
@@ -185,34 +152,19 @@ function particlepicker()
 end
 
 """
-        run()
+    particle_selector_wdg(i::Int64)
 
-Run PointNshoot script
+Opens particle selector widget and stores to input particle tree upon exit.
 """
-function run()
-    GLMakie.activate!()
-
-    s = Observable{Any}(Scene()) # scene output
-    pt = Observable{Any}(nothing) # stored particles
-    pid = Observable{Any}(nothing)
-
-    # sine_button = Interact.button("Sine plot")
-    # cos_button = Interact.button("Cos plot")
-    # spi_button = Interact.button("Spiral plot")
-    # clear_button = Interact.button("Clear plots")
-
-    # map!(sineplot!,s,sine_button,s[])
-    # map!(cosplot!,s,cos_button,s[])
-    # map!(spiplot!,s,spi_button,s[])
-    # map!(clearplot!,s,clear_button,s[])
-
+function particle_selector_wdg!(i::Int64,pt::ParticleTree)
     # *** PARTICLE ID INPUT ***
     part_text = Interact.latex("\\text{\\textbf{Particle components}}")
     el = Interact.spinbox(label="Electrons"; value=0,step="any")
     pr = Interact.spinbox(label="Protons"; value=0)
     nu = Interact.spinbox(label="Neutrons"; value=0)
     part_components = Interact.hbox(pr,nu,el)
-
+ 
+    particle_val = Interact.@map ParticleID(&pr,&nu,&el)
     part_display = Interact.vbox(part_text,part_components)
 
     # *** POSITION INPUT ***
@@ -233,6 +185,8 @@ function run()
     zval = Interact.@map &zstart*dist_dict[&dist_wdg]
     zdisp = Interact.hbox(zstart)
 
+    position_val = Interact.@map Vector([&xval,&yval,&zval])
+
     dist_text = Interact.hbox(latex("\\text{\\textbf{Initial Position}(}"),dist_wdg,latex("\\text{)}"))
     dist_display = Interact.vbox(dist_text,xdisp,ydisp,zdisp)
 
@@ -244,7 +198,7 @@ function run()
     enu_disp = Interact.@map Interact.latex("\\text{$(&enu_wdg)}")
 
     enstart = Interact.spinbox(value = 0.0)
-    enval = Interact.@map &enstart*enu_dict[&enu_wdg]
+    energy_val = Interact.@map &enstart*enu_dict[&enu_wdg]
     en_disp = Interact.hbox(enstart,enu_disp)
 
     energy_display = Interact.hbox(latex("\\text{\\textbf{Energy = }}"),enstart,enu_wdg)
@@ -259,7 +213,7 @@ function run()
     aim_display = Interact.vbox(aim_text,xaim,yaim,zaim)
 
     pos_aim = Interact.hbox(dist_display,aim_display)
- 
+    
     # *** TIME INPUT***
 
     ## Manual timestep
@@ -269,29 +223,29 @@ function run()
     timeu_dict    = OrderedDict(zip(timeu_names,timeu_objects))
 
     # make time and dt unit widgets
-    timeu_wdg = Interact.dropdown(timeu_names)
+    # timeu_wdg = Interact.dropdown(timeu_names)
     dtu_wdg   = Interact.dropdown(timeu_names)
 
     # make numerical input widgets for time and dt
-    time_num = Interact.spinbox(label = "Duration:",value = 0.0)
+    # time_num = Interact.spinbox(label = "Duration:",value = 0.0)
     dt_num   = Interact.spinbox(label = "Time step:",value = 0.0)
 
     # bind time and dt widget values into quantities
-    time_val = Interact.@map &time_num*timeu_dict[&timeu_wdg]
+    # time_val = Interact.@map &time_num*timeu_dict[&timeu_wdg]
     dt_val   = Interact.@map &dt_num*timeu_dict[&dtu_wdg]
 
     # join number and unit widgets together for display
-    time_disp = Interact.hbox(time_num,timeu_wdg)
+    # time_disp = Interact.hbox(time_num,timeu_wdg)
     dt_disp = Interact.hbox(dt_num,dtu_wdg)
 
     # join time and dt widgets together
-    mantime_disp = Interact.vbox(time_disp,dt_disp)
+    # mantime_disp = Interact.vbox(time_disp,dt_disp)
+    mantime_disp = dt_disp
 
     ## Automatic timestep
     # get the field value at the current location
 
     autotime_disp = Interact.latex("\\text{Not yet implemented...}")
-
 
     ## Choose between time modes
     # make dictionary of different time modes
@@ -309,15 +263,37 @@ function run()
     time_text = Interact.latex("\\text{\\textbf{Time settings}}")
     time_section = Interact.@map Interact.vbox(time_text,timemodes_wdg,&timemodes_disp)
 
-    ## *** Construct particle
+    ## *** Construct particle ***
     pt_obj = Observable(ParticleTree())
+    clearpt(i::Int64) = ParticleTree()
     clearpt_button = Interact.button("Clear particles")
+    map!(clearpt,pt_obj,clearpt_button)
+
+    # add particle button and functionality
     addpt_button   = Interact.button("Add particle")
+    Interact.@on begin
+        &addpt_button
+        newpt = ParticleTree(particle_val[],energy_val[],position_val[],aim_val[],dt_val[])
+        push!(pt_obj,newpt)
+    end
+
+    # ParticleTree control buttons
     pt_buttons = Interact.hbox(pad(1em,addpt_button),pad(1em,clearpt_button))
 
     # TODO: add particle whenever "addpt_button" is pressed
 
     # *** MAKE DISPLAY ***
+    w  = Window()
+
+    # Save & close = close window and return ParticleTree
+    close_button = Interact.button("Save & close")
+    Interact.@on begin
+        &close_button
+        pt = pt_obj[]
+        close(w)
+    end
+
+    # assemble all ui elements and display in window
     ui = dom"div"(
         part_display,
         Interact.hline(),
@@ -327,11 +303,48 @@ function run()
         Interact.hline(),
         time_section,
         Interact.hline(),
-        pt_buttons
+        pt_buttons,
+        Interact.hline(),
+        close_button
         )
-    w  = Window()
     body!(w,ui)
 
+end
+
+"""
+        run()
+
+Run PointNshoot script
+"""
+function run()
+    GLMakie.activate!()
+
+    s = Observable{Any}(Scene()) # scene output
+    pt = Observable(ParticleTree())
+    newpt = Observable(ParticleTree())
+
+    println("*** TEST 9 ***")
+    w = Window()
+    add_particle_button = Interact.button("Add particle(s)")
+    map!(particle_selector_wdg!,newpt,add_particle_button,newpt[])
+
+    println("*** TEST 10 ***")
+    Interact.@on push!(pt[],&newpt)
+
+    Interact.@on begin
+        &newpt
+        println(length(pt[].nodes))
+    end
+    update_plot_button = Interact.button("Update plot")
+
+    println("*** TEST 11 ***")
+    ui = dom"div"(
+        add_particle_button,
+        update_plot_button
+    )
+
+    body!(w,ui)
+    println("*** TEST 12 ***")
     return s[]
     # # REQUEST SIMULATION PARAMETERS
     # # get number of particles

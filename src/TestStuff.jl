@@ -6,15 +6,13 @@ using .StarStuff
 
 function run()
 
+    pt = pt_manualdt_wdg()
 
-    part = energy_wdg()
+    Interact.@on println(print_human_readable(&pt))
 
-    Interact.@on begin
-        println(&part)
-    end
     w = Window()
     ui = dom"div"(
-        part
+        pt
     )
     body!(w,ui)
 

@@ -192,6 +192,8 @@ function Base.push!(pt::ParticleTree,val::Union{ParticleTree,Timescale,Snapshot,
     if isa(val,ParticleTree)
         if length(pt.nodes) == 0
             pt = val
+        elseif length(val.nodes == 0)
+            return pt
         else
             for ts in val.nodes
                 add_node!(pt,ts)

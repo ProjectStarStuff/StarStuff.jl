@@ -66,7 +66,7 @@ function energy_wdg()
     enu_wdg = Interact.dropdown(enu_names)
     enu_disp = Interact.@map Interact.latex("\\text{$(&enu_wdg)}")
     # value input
-    enstart = Interact.spinbox(value = 0.0)
+    enstart = Interact.spinbox(value = 1.0)
     # combine unit and value
     output = Interact.@map &enstart*enu_dict[&enu_wdg]
     # define widget
@@ -109,7 +109,7 @@ function manualdt_wdg()
     dtu = Interact.dropdown(tu_names)
 
     # make numerical input widgets for time and dt
-    dt = Interact.spinbox(label = "Time step:",value = 0.0)
+    dt = Interact.spinbox(value = 1.0)
 
     # bind units and values into quantities
     output = Interact.@map &dt*tu_dict[&dtu]
@@ -118,14 +118,16 @@ function manualdt_wdg()
     wdg = Widget(["dt"=>dt,"u"=>dtu], output = output)
 
     # join number and unit widgets together for display
-    Interact.@layout! wdg Interact.hbox(dt,dtu)
+    dt_text = Interact.latex("\\text{\\textbf{Time Step}}")
+    dt_val  = Interact.hbox(dt,dtu)
+    Interact.@layout! wdg Interact.vbox(dt_text,dt_val)
 end
 export manualdt_wdg
 
 """
     pt_manualdt_wdg()
 
-Widget to manually add particles to the simulation, including timestep. Returns Observable{ParticleTree}
+Widget to generate particles manual timestep. Returns Observable{ParticleTree}
 """
 function pt_manualdt_wdg()
     particle  = particle_wdg()
@@ -134,27 +136,33 @@ function pt_manualdt_wdg()
     direction = direction_wdg()
     dt        = manualdt_wdg()
 
-    output = Observable(ParticleTree())
+    output = Observable{Any}(ParticleTree())
+    # ptnew  = Observable(ParticleTree())
 
     button_addpt = Interact.button("Add particle")
-    add_particle(i::Int64,pt::ParticleTree,ptnew::ParticleTree) = push!(pt,ptnew)
-    map!(add_particle,output,button_addpt,output[],ParticleTree(particle[],energy[],position[],direction[],dt[]))
-    # Interact.@map begin
-    #     &button_addpt
-    #     newparticle = ParticleTree(particle[], energy[], position[], direction[], dt[])
-    #     push!(output[],newparticle)
-    #     println(output[])
-    # end
 
-    Interact.@on println(&output)
-    # Interact.@on println(length(getproperty(&output,nodes)))
+    ptnew = Interact.@map (&button_addpt; ParticleTree(particle[],energy[],position[],direction[],dt[]))
+    # output = Interact.@map (&button_addpt; ParticleTree(particle[],energy[],position[],direction[],dt[]))
+
+    # Interact.@on (&button_addpt;println("inside function: output length = ", length(getproperty(output[],:nodes))))
+
+    Interact.@on push!(output[],&ptnew)
+    connect!(ptnew,output)
 
     wdg = Widget(["particle"=>particle,"energy"=>energy,"position"=>position,"direction"=>direction,"dt"=>dt], output = output)
 
-    pid_en = Interact.hbox(particle, energy)
     pos_dir = Interact.hbox(position,direction)
 
-    Interact.@layout! wdg Interact.vbox(pid_en,pos_dir,dt,button_addpt)
+    Interact.@layout! wdg Interact.vbox(particle,
+                                        hline(),
+                                        energy,
+                                        hline(),
+                                        pos_dir,
+                                        hline(),
+                                        dt,
+                                        hline(),
+                                        button_addpt
+                                        )
 end
 export pt_manualdt_wdg
 # END DEFINE WIDGETS

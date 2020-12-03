@@ -1,4 +1,3 @@
-# TODO: Add empty tree constructors
 # BEGIN PARTICLE TREE
 """
 Leaf structure in galaxy tree consists of position and momentum coordinates of a specific particle
@@ -73,20 +72,26 @@ function ParticleTree()
     emptycoords = typeof(coord)[]
 
     # stick Coords in a Species
-    sp = construct(Species,emptycoords,Float64[],ParticleID(0,0,0))
-    emptysp = typeof(sp)[]
+    # sp = construct(Species,emptycoords,Float64[],ParticleID(0,0,0))
+    # emptysp = typeof(sp)[]
+
+    sp = construct(Species,Vector([coord]),Float64[],ParticleID(0,0,0))
+
 
     # stick Species in a Snapshot
-    snap = construct(Snapshot,emptysp)
-    emptysnap = typeof(snap)[]
+    # snap = construct(Snapshot,emptysp)
+    # emptysnap = typeof(snap)[]
+    snap = construct(Snapshot,Vector([sp]))
 
     # stick Snapshot in a Timescale
-    time_init = Float64[]
+    time_init = Vector([0.0])
     dt = -1.0
-    scale = construct(Timescale,emptysnap,Float64[],time_init,dt)
+    scale = construct(Timescale,Vector([snap]),Float64[],time_init,dt)
     emptyscale = typeof(scale)[]
     # stick Timescale in a ParticleTree
-    particletree = construct(ParticleTree,emptyscale)
+    particletree = construct(ParticleTree,Vector([scale]))
+    remove_node!(particletree,1)
+    return particletree
 end
 
 # FUNCTIONS TO HELP GENERATE PARTICLE TREES
@@ -190,20 +195,52 @@ Push contents of val to last container of same type.
 """
 function Base.push!(pt::ParticleTree,val::Union{ParticleTree,Timescale,Snapshot,Species,Coords})
     if isa(val,ParticleTree)
-        if length(pt.nodes) == 0
-            pt = val
-        elseif length(val.nodes == 0)
-            return pt
+        if length(val.nodes) == 0
+            return nothing
+        elseif length(pt.nodes) == 0
+            append!(pt.nodes,val.nodes)
+            append!(pt.values,val.values)
+            append!(pt.end_idxs,val.end_idxs)
+            return nothing
         else
             for ts in val.nodes
                 add_node!(pt,ts)
             end
+            return nothing
         end 
     else
         I = Vector([length(pt.nodes)])
         __push!(pt,val,I)
     end
+    return nothing
 end
+
+"""
+    push(pt::ParticleTree,val::Union{ParticleTree,Timescale,Snapshot,Species,Coords})
+
+No-side-effect version of push!.
+"""
+function push(pt::ParticleTree,val::Union{ParticleTree,Timescale,Snapshot,Species,Coords})
+    if isa(val,ParticleTree)
+        if length(val.nodes) == 0
+            return deepcopy(pt)
+        elseif length(pt.nodes) == 0
+            return deepcopy(val)
+        else
+            out = deepcopy(pt)
+            for ts in val.nodes
+                add_node!(out,ts)
+            end
+            return out
+        end 
+    else
+        out = deepcopy(pt)
+        I = Vector([length(out.nodes)])
+        __push!(pt,val,I)
+    end
+    return nothing
+end
+export push
 
 """
     initParticles(particleTypes, energies, rStart, particleAim, gpFrac, bfield)

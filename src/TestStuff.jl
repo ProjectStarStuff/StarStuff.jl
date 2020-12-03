@@ -8,7 +8,8 @@ function run()
 
     pt = pt_manualdt_wdg()
 
-    Interact.@on println(print_human_readable(&pt))
+    # Interact.@on println("Number of particles = ",length(getproperty(&pt,:nodes)))
+    Interact.@on println("*** New Particle ***\n",&pt)
 
     w = Window()
     ui = dom"div"(
@@ -20,7 +21,7 @@ function run()
     # test = ParticleTree()
     # println(length(test.nodes))
     # push!(test,ParticleTree())
-    # println(length(test.nodes))
+    # println("length(test.nodes) = ", length(test.nodes))
     # # parameters for push! test
     # el = ParticleID(0,0,1)
     # en = upreferred(1.0u"GeV")
@@ -29,8 +30,22 @@ function run()
     # dt = 1.0u"s"
 
     # elpt = ParticleTree(el,en,pos,dir,dt)
-    # push!(test,elpt)
+    # elcopy = deepcopy(elpt)
+    # println("length(elpt.nodes) = ", length(elpt.nodes))
+    # println("length(elcopy.nodes) = ", length(elcopy.nodes))
+
     # println(elpt)
+    # # test = push(test,elpt)
+    # push!(test,elpt)
+    # println("length(test.nodes) = ", length(test.nodes))
+
+    # println(test)
+    # # test = push(test,elpt)
+    # push!(test,elpt)
+    # println("length(test.nodes) = ", length(test.nodes)) 
+    # println(test)
+
+
     # aim2 = Vector([0.0,1.0,0.0])
     # aim2 = normalize(aim2)
     # pos2 = usistrip.(pos)

@@ -6,18 +6,130 @@ using .StarStuff
 
 function run()
 
-    pt = pt_manualdt_wdg()
+    bulma = joinpath(@__DIR__,"..","app","bulma.css")
+    WNode = WebIO.Node
+    w = Window(async=false)
+    load!(w,bulma)
+    tabitems = WNode(
+        :ul,
+        WNode(:li,
+            WNode(:a,"Particles"),
+            id="particles",
+            className="is-active",
+            events=Dict(
+                "click" =>
+                    js"""
+                    function(){
+                        let thisindex = 1
+                        let tablist = ["particles","bfield","sim","plot"]
+                        let thisid = tablist[thisindex]
+                        let thistab = this.dom.getElementByID(thisid)
+                
+                        for(i=0; i < length(tablist); i++){
+                            let itab = this.dom.getElementByID(tablist[i]);
+                            itab.classList.remove('is-active');
+                        }
+                
+                        thistab.classList.add('is-active')
+                    }
+                    """
+            )
+        ),
+        WNode(:li,
+            WNode(:a,"Magnetic Field"),
+            id="bfield",
+            events=Dict(
+                "click" =>
+                    js"""
+                    function(){
+                        let thisindex = 2
+                        let tablist = ["particles","bfield","sim","plot"]
+                        let thisid = tablist[thisindex]
+                        let thistab = this.dom.getElementByID(thisid)
+                
+                        for(i=0; i < length(tablist); i++){
+                            let itab = this.dom.getElementByID(tablist[i]);
+                            itab.classList.remove('is-active');
+                        }
+                
+                        thistab.classList.add('is-active')
+                    }
+                    """
+            )
 
-    # Interact.@on println("Number of particles = ",length(getproperty(&pt,:nodes)))
-    Interact.@on println("*** New Particle ***\n",&pt)
+        ),
+        WNode(:li,
+            WNode(:a,"Simulate"),
+            id="sim",
+            events=Dict(
+                "click" =>
+                    js"""
+                    function(){
+                        let thisindex = 3
+                        let tablist = ["particles","bfield","sim","plot"]
+                        let thisid = tablist[thisindex]
+                        let thistab = this.dom.getElementByID(thisid)
+                
+                        for(i=0; i < length(tablist); i++){
+                            let itab = this.dom.getElementByID(tablist[i]);
+                            itab.classList.remove('is-active');
+                        }
+                
+                        thistab.classList.add('is-active')
+                    }
+                    """
+            )
 
-    w = Window()
-    ui = dom"div"(
-        pt
+        ),
+        WNode(:li,
+            WNode(:a,"Plot"),
+            id="plot",
+            events=Dict(
+                "click" =>
+                    js"""
+                    function(){
+                        let thisindex = 4
+                        let tablist = ["particles","bfield","sim","plot"]
+                        let thisid = tablist[thisindex]
+                        let thistab = this.dom.getElementByID(thisid)
+                
+                        for(i=0; i < length(tablist); i++){
+                            let itab = this.dom.getElementByID(tablist[i]);
+                            itab.classList.remove('is-active');
+                        }
+                
+                        thistab.classList.add('is-active')
+                    }
+                    """
+            )
+
+        )
+
     )
-    body!(w,ui)
+    tabs = WNode(
+        :div,
+        tabitems,
+        attributes=Dict(:class=>"tabs is-boxed",:id=>"star-tabs")
+    )
 
 
+    body!(w,tabs)
+
+    # ********** ParticleTree widget test **********
+    # pt = pt_manualdt_wdg()
+
+    # # printbutton = Interact.button("Print")
+    # # Interact.@on println("Number of particles = ",length(getproperty(&pt,:nodes)))
+    # Interact.@on println("*** New Particle ***\n",getindex(&pt,2))
+    # # Interact.@map (&printbutton; println(pt[]))
+
+    # w = Window()
+    # ui = dom"div"(
+    #     pt
+    # )
+    # body!(w,ui)
+
+    # ********** Creation of empty ParticleTree and appending nodes **********
     # test = ParticleTree()
     # println(length(test.nodes))
     # push!(test,ParticleTree())

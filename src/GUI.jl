@@ -136,7 +136,7 @@ function pt_manualdt_wdg()
     direction = direction_wdg()
     dt        = manualdt_wdg()
 
-    output = Observable{Any}(ParticleTree())
+    ptout = Observable{Any}(ParticleTree())
     # ptnew  = Observable(ParticleTree())
 
     button_addpt = Interact.button("Add particle")
@@ -144,12 +144,15 @@ function pt_manualdt_wdg()
     ptnew = Interact.@map (&button_addpt; ParticleTree(particle[],energy[],position[],direction[],dt[]))
     # output = Interact.@map (&button_addpt; ParticleTree(particle[],energy[],position[],direction[],dt[]))
 
-    # Interact.@on (&button_addpt;println("inside function: output length = ", length(getproperty(output[],:nodes))))
+    Interact.@on begin
+        # println("output.nodes length = ",length(getproperty(output[],:nodes)))
+        push!(ptout[],&ptnew)
+        # println("output.nodes length = ",length(getproperty(output[],:nodes)))
+    end
 
-    Interact.@on push!(output[],&ptnew)
-    connect!(ptnew,output)
+    output = Interact.@map (&button_addpt,&ptout)
 
-    wdg = Widget(["particle"=>particle,"energy"=>energy,"position"=>position,"direction"=>direction,"dt"=>dt], output = output)
+    wdg = Widget(["particle"=>particle,"energy"=>energy,"position"=>position,"direction"=>direction,"dt"=>dt,"addbutton"=>button_addpt], output = output)
 
     pos_dir = Interact.hbox(position,direction)
 
@@ -165,6 +168,10 @@ function pt_manualdt_wdg()
                                         )
 end
 export pt_manualdt_wdg
+
+function pns_home_wdg()
+
+end
 # END DEFINE WIDGETS
 ###############################################################################
 

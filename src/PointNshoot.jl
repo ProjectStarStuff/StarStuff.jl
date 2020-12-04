@@ -317,35 +317,7 @@ end
 Run PointNshoot script
 """
 function run()
-    GLMakie.activate!()
-
     s = Observable{Any}(Scene()) # scene output
-    pt = Observable(ParticleTree())
-    newpt = Observable(ParticleTree())
-
-    add_particle_button = Interact.button("Add particle(s)")
-    Interact.@on begin
-        &add_particle_button
-        particle_selector_wdg!(newpt[])
-    end
-
-    Interact.@on push!(pt[],&newpt)
-
-    Interact.@on begin
-        &newpt
-        println(length(pt[].nodes))
-    end
-    update_plot_button = Interact.button("Update plot")
-
-    test_button = Interact.button("Test")
-
-    Interact.@on begin
-        &test_button
-        println(newpt[])
-        println("****************************")
-        println(pt[])
-    end
-
     ui = dom"div"(
         add_particle_button,
         update_plot_button,

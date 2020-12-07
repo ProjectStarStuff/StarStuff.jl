@@ -2,118 +2,101 @@ module TestStuff
 
 include("StarStuff.jl")
 using .StarStuff
+# using Gtk
+# js"""
+# function(){
+#     function clearactive(item,index){
+        
+
+#     }
+#     let thisindex = 1;
+#     let tablist = ['particles','bfield','sim','plot'];
+#     let thisid = tablist[thisindex];
+#     let thistab = document.getElementById(thisid);
+#     for (let iname in tablist){
+#         let itab = document.getElementById(iname);
+#         itab.classList.remove('is-active');
+#     }
+
+#     alert('test');
+
+
+#     thistab.classList.add('is-active');
+# }
+# """
 
 
 function run()
+    a = Vector([1.,2.,3.])
+    b = Vector([4.,5.,6.])
 
-    bulma = joinpath(@__DIR__,"..","app","bulma.css")
-    WNode = WebIO.Node
-    w = Window(async=false)
-    load!(w,bulma)
-    tabitems = WNode(
-        :ul,
-        WNode(:li,
-            WNode(:a,"Particles"),
-            id="particles",
-            className="is-active",
-            events=Dict(
-                "click" =>
-                    js"""
-                    function(){
-                        let thisindex = 1
-                        let tablist = ["particles","bfield","sim","plot"]
-                        let thisid = tablist[thisindex]
-                        let thistab = this.dom.getElementByID(thisid)
-                
-                        for(i=0; i < length(tablist); i++){
-                            let itab = this.dom.getElementByID(tablist[i]);
-                            itab.classList.remove('is-active');
-                        }
-                
-                        thistab.classList.add('is-active')
-                    }
-                    """
-            )
-        ),
-        WNode(:li,
-            WNode(:a,"Magnetic Field"),
-            id="bfield",
-            events=Dict(
-                "click" =>
-                    js"""
-                    function(){
-                        let thisindex = 2
-                        let tablist = ["particles","bfield","sim","plot"]
-                        let thisid = tablist[thisindex]
-                        let thistab = this.dom.getElementByID(thisid)
-                
-                        for(i=0; i < length(tablist); i++){
-                            let itab = this.dom.getElementByID(tablist[i]);
-                            itab.classList.remove('is-active');
-                        }
-                
-                        thistab.classList.add('is-active')
-                    }
-                    """
-            )
+    c = ArrayPartition(a,b)
+    d = Coords(c)
+    println(d)
 
-        ),
-        WNode(:li,
-            WNode(:a,"Simulate"),
-            id="sim",
-            events=Dict(
-                "click" =>
-                    js"""
-                    function(){
-                        let thisindex = 3
-                        let tablist = ["particles","bfield","sim","plot"]
-                        let thisid = tablist[thisindex]
-                        let thistab = this.dom.getElementByID(thisid)
-                
-                        for(i=0; i < length(tablist); i++){
-                            let itab = this.dom.getElementByID(tablist[i]);
-                            itab.classList.remove('is-active');
-                        }
-                
-                        thistab.classList.add('is-active')
-                    }
-                    """
-            )
+    # win = GtkWindow("My First Gtk.jl Program", 400, 200)
 
-        ),
-        WNode(:li,
-            WNode(:a,"Plot"),
-            id="plot",
-            events=Dict(
-                "click" =>
-                    js"""
-                    function(){
-                        let thisindex = 4
-                        let tablist = ["particles","bfield","sim","plot"]
-                        let thisid = tablist[thisindex]
-                        let thistab = this.dom.getElementByID(thisid)
-                
-                        for(i=0; i < length(tablist); i++){
-                            let itab = this.dom.getElementByID(tablist[i]);
-                            itab.classList.remove('is-active');
-                        }
-                
-                        thistab.classList.add('is-active')
-                    }
-                    """
-            )
+    # b = GtkButton("Click Me")
+    # push!(win,b)
+    
+    # function on_button_clicked(w)
+    #   println("The button has been clicked")
+    # end
+    # signal_connect(on_button_clicked, b, "clicked")
+    
+    # Gtk.showall(win)
+    # appdir = joinpath(@__DIR__,"..","app")
+    # bulma  = joinpath(appdir,"bulma.css")
+    # uijs   = joinpath(appdir,"ui.js")
+    # WNode  = WebIO.Node
+    # w = Window(async=false)
+    # load!(w,bulma)
+    # load!(w,uijs)
+    # tabitems = WNode(
+    #     :ul,
+    #     WNode(:li,
+    #         WNode(:a,"Particles"),
+    #         id="particles",
+    #         # className="is-active",
+    #         events=Dict(
+    #             # "click" => js"tabs.setActive(1)"
+    #         )
+    #     ),
+    #     WNode(:li,
+    #         WNode(:a,"Magnetic Field"),
+    #         id="bfield",
+    #         className="is-active",
+    #         events=Dict(
+    #             # "click" => js"tabs.setActive(2)"
+    #         )
 
-        )
+    #     ),
+    #     WNode(:li,
+    #         WNode(:a,"Simulate"),
+    #         id="sim",
+    #         events=Dict(
+    #             # "click" => js"tabs.setActive(3)"
+    #         )
 
-    )
-    tabs = WNode(
-        :div,
-        tabitems,
-        attributes=Dict(:class=>"tabs is-boxed",:id=>"star-tabs")
-    )
+    #     ),
+    #     WNode(:li,
+    #         WNode(:a,"Plot"),
+    #         id="plot",
+    #         events=Dict(
+    #             # "click" => js"tabs.setActive(4)"
+    #         )
+
+    #     )
+
+    # )
+    # tabs = WNode(
+    #     :div,
+    #     tabitems,
+    #     attributes=Dict(:class=>"tabs is-boxed",:id=>"star-tabs")
+    # )
 
 
-    body!(w,tabs)
+    # body!(w,tabs)
 
     # ********** ParticleTree widget test **********
     # pt = pt_manualdt_wdg()

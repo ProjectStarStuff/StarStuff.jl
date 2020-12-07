@@ -25,8 +25,8 @@ module StarStuff
     @reexport using AbstractPlotting
     @reexport using AbstractPlotting.MakieLayout
 
-    @reexport using Interact
-    @reexport using Blink
+    # @reexport using Interact
+    # @reexport using Blink
 
     include("Particle.jl")
     include("Kinematics.jl")    

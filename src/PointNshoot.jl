@@ -4,12 +4,6 @@ include("StarStuff.jl")
 
 using .StarStuff
 
-
-using Blink
-using Interact
-
-using GLMakie
-
 """
         singleParticleTree(particle::ParticleID,energy::Quantity,r0::Quantity,direction::Vector,gpFrac::Float64)
 
@@ -86,6 +80,26 @@ function best_units(x::Float64)
     return units
 end
 
+function show_bfield(scene::Scene)
+    nmin = 10
+    nmax = 100
+    nr = 100
+    nz = 100
+
+    units_distance = u"kpc"
+
+    rmin = ustrip(units_distance,Bfield.janssonDict[:rdisklims][1])
+    rmax = ustrip(units_distance,Bfield.janssonDict[:rdisklims][end])
+    rr = LinRange(3.0,20.0,nr)
+    zz = LinRange(-1.0,1.0,nz)
+    coords = typeof((0.0,0.0,0.0))[]
+    for (index,r) in enumerate(rr)
+        frac = (nmax-nmin)*index/nr
+        n = nmin + Int(round(frac))
+        θ = 
+    end
+end
+
 function pnsScene!(scene::Scene,pt::ParticleTree;filename::Union{String,Nothing}=nothing)
     # Extract coordinates from particle tree
     times, traj = getParticleTrajectory(pt,1,1,1)
@@ -128,188 +142,12 @@ function pnsScene!(scene::Scene,pt::ParticleTree;filename::Union{String,Nothing}
     xlabel!(scene, "X ($axesunits)")
     ylabel!(scene, "Y ($axesunits)")
     zlabel!(scene, "Z ($axesunits)")
-    update!(scene)
+    AbstractPlotting.update!(scene)
 
     return scene
 end
 
-function clearplot!(a::Int64,s::Scene)
-    clear!(s)
-end
 
-"""
-    function particlepicker()
-
-Widget to select a particle. Returns a ParticleID
-"""
-function particlepicker()
-    el = spinbox(label="Electrons"; value=0)
-    pr = spinbox(label="Protons"; value=0)
-    nu = spinbox(label="Neutrons"; value=0)
-    output = Interact.@map(ParticleID(&pr,&nu,&el))
-    wdg = Widget(["e"=>el,"p"=>pr,"n"=>nu],output=output)
-    @layout! wdg Interact.hbox(pr,nu,el)
-end
-
-"""
-    particle_selector_wdg(i::Int64)
-
-Opens particle selector widget and stores to input particle tree upon exit.
-"""
-function particle_selector_wdg!(pt::ParticleTree)
-    # *** PARTICLE ID INPUT ***
-    part_text = Interact.latex("\\text{\\textbf{Particle components}}")
-    el = Interact.spinbox(label="Electrons"; value=0,step="any")
-    pr = Interact.spinbox(label="Protons"; value=0)
-    nu = Interact.spinbox(label="Neutrons"; value=0)
-    part_components = Interact.hbox(pr,nu,el)
- 
-    particle_val = Interact.@map ParticleID(&pr,&nu,&el)
-    part_display = Interact.vbox(part_text,part_components)
-
-    # *** POSITION INPUT ***
-    dist_names = ["kpc","pc","km","m","cm"]
-    dist_objects = [1.0u"kpc",1.0u"pc",1.0u"km",1.0u"m",1.0u"cm",]
-    dist_dict = OrderedDict(zip(dist_names,dist_objects))
-    dist_wdg = Interact.dropdown(dist_names)
-    # Interact.@on println(&unit_wdg)
-    dist_disp = Interact.@map Interact.latex("\\text{$(&dist_wdg)}")
-
-    xstart = Interact.spinbox(label="X: "; value = -8.5)
-    xval = Interact.@map &xstart*dist_dict[&dist_wdg]
-    xdisp = Interact.hbox(xstart)
-    ystart = Interact.spinbox(label="Y: "; value = 0.0)
-    yval = Interact.@map &ystart*dist_dict[&dist_wdg]
-    ydisp = Interact.hbox(ystart)
-    zstart = Interact.spinbox(label="Z: "; value = 0.0)
-    zval = Interact.@map &zstart*dist_dict[&dist_wdg]
-    zdisp = Interact.hbox(zstart)
-
-    position_val = Interact.@map Vector([&xval,&yval,&zval])
-
-    dist_text = Interact.hbox(latex("\\text{\\textbf{Initial Position}(}"),dist_wdg,latex("\\text{)}"))
-    dist_display = Interact.vbox(dist_text,xdisp,ydisp,zdisp)
-
-    # *** ENERGY INPUT ***
-    enu_names = ["GeV","TeV","MeV","keV"]
-    enu_objects = [1.0u"GeV",1.0u"TeV",1.0u"MeV",1.0u"keV"]
-    enu_dict = OrderedDict(zip(enu_names,enu_objects))
-    enu_wdg = Interact.dropdown(enu_names)
-    enu_disp = Interact.@map Interact.latex("\\text{$(&enu_wdg)}")
-
-    enstart = Interact.spinbox(value = 0.0)
-    energy_val = Interact.@map &enstart*enu_dict[&enu_wdg]
-    en_disp = Interact.hbox(enstart,enu_disp)
-
-    energy_display = Interact.hbox(latex("\\text{\\textbf{Energy = }}"),enstart,enu_wdg)
-
-    # *** DIRECTION INPUT ***
-    aim_text = Interact.latex("\\text{\\textbf{Initial Direction}}")
-    xaim = Interact.spinbox(label="X: ",value = 1.0)
-    yaim = Interact.spinbox(label="Y: ",value = 0.0)
-    zaim = Interact.spinbox(label="Z: ",value = 0.0)
-    aim_val = Interact.@map normalize(Vector([&xaim,&yaim,&zaim]))
-
-    aim_display = Interact.vbox(aim_text,xaim,yaim,zaim)
-
-    pos_aim = Interact.hbox(dist_display,aim_display)
-    
-    # *** TIME INPUT***
-
-    ## Manual timestep
-    # make dictionary for time and dt units
-    timeu_names   = ["sec","min","hr","day","yr","kyr","Myr"]
-    timeu_objects = [1.0u"s",1.0u"minute",1.0u"hr",1.0u"d",1.0u"yr",1.0u"kyr",1.0u"Myr"]
-    timeu_dict    = OrderedDict(zip(timeu_names,timeu_objects))
-
-    # make time and dt unit widgets
-    # timeu_wdg = Interact.dropdown(timeu_names)
-    dtu_wdg   = Interact.dropdown(timeu_names)
-
-    # make numerical input widgets for time and dt
-    # time_num = Interact.spinbox(label = "Duration:",value = 0.0)
-    dt_num   = Interact.spinbox(label = "Time step:",value = 0.0)
-
-    # bind time and dt widget values into quantities
-    # time_val = Interact.@map &time_num*timeu_dict[&timeu_wdg]
-    dt_val   = Interact.@map &dt_num*timeu_dict[&dtu_wdg]
-
-    # join number and unit widgets together for display
-    # time_disp = Interact.hbox(time_num,timeu_wdg)
-    dt_disp = Interact.hbox(dt_num,dtu_wdg)
-
-    # join time and dt widgets together
-    # mantime_disp = Interact.vbox(time_disp,dt_disp)
-    mantime_disp = dt_disp
-
-    ## Automatic timestep
-    # get the field value at the current location
-
-    autotime_disp = Interact.latex("\\text{Not yet implemented...}")
-
-    ## Choose between time modes
-    # make dictionary of different time modes
-    timemodes_list = ["MANUAL","AUTOMATIC"]
-    timemodes_objects = [mantime_disp,autotime_disp]
-    timemodes_dict = OrderedDict(zip(timemodes_list,timemodes_objects))
-
-    # make toggle widget for different time modes
-    timemodes_wdg = Widgets.togglebuttons(timemodes_list)
-
-    # make observable for proper time display
-    timemodes_disp = Interact.@map timemodes_dict[&timemodes_wdg]
-
-    # join toggle widget and time input
-    time_text = Interact.latex("\\text{\\textbf{Time settings}}")
-    time_section = Interact.@map Interact.vbox(time_text,timemodes_wdg,&timemodes_disp)
-
-    ## *** Construct particle ***
-    pt_obj = Observable(ParticleTree())
-    clearpt(i::Int64) = ParticleTree()
-    clearpt_button = Interact.button("Clear particles")
-    map!(clearpt,pt_obj,clearpt_button)
-
-    # add particle button and functionality
-    addpt_button   = Interact.button("Add particle")
-    Interact.@on begin
-        &addpt_button
-        newpt = ParticleTree(particle_val[],energy_val[],position_val[],aim_val[],dt_val[])
-        push!(pt_obj[],newpt)
-    end
-
-    # ParticleTree control buttons
-    pt_buttons = Interact.hbox(pad(1em,addpt_button),pad(1em,clearpt_button))
-
-    # TODO: add particle whenever "addpt_button" is pressed
-
-    # *** MAKE DISPLAY ***
-    w  = Window()
-
-    # Save & close = close window and return ParticleTree
-    close_button = Interact.button("Save & close")
-    Interact.@on begin
-        &close_button
-        push!(pt,pt_obj[])
-        close(w)
-    end
-
-    # assemble all ui elements and display in window
-    ui = dom"div"(
-        part_display,
-        Interact.hline(),
-        energy_display,
-        Interact.hline(),
-        pos_aim,
-        Interact.hline(),
-        time_section,
-        Interact.hline(),
-        pt_buttons,
-        Interact.hline(),
-        close_button
-        )
-    body!(w,ui)
-
-end
 
 """
         run()
@@ -317,15 +155,16 @@ end
 Run PointNshoot script
 """
 function run()
-    s = Observable{Any}(Scene()) # scene output
-    ui = dom"div"(
-        add_particle_button,
-        update_plot_button,
-        test_button
-    )
-    w = Window()
-    body!(w,ui)
-    return s[]
+    # GLMakie.activate!()
+    # s = Observable{Any}(Scene()) # scene output
+    # ui = dom"div"(
+    #     add_particle_button,
+    #     update_plot_button,
+    #     test_button
+    # )
+    # w = Window()
+    # body!(w,ui)
+    # return s[]
     # # REQUEST SIMULATION PARAMETERS
     # # get number of particles
     # nparticles = get_until_correct("Number of particles: ",Int)
@@ -359,26 +198,34 @@ function run()
     #     # direction
     # end
     # println("Number of particles = ", nparticles)
-    # #    # energies at which to generate particles
-    # #    energy = [0.01,0.1,1.0,10.0]*u"TeV"
-    # #    # fire particles from different galactic radii
-    # #    rStart = 8.5u"kpc"
-    # #    # directions to fire particles (these will be normalized)
-    # #    outRadially  = [-1.0,0.0,0.0]
-    # #    particleAim = Vector([outRadially])
-    # #
-    # #    gpFrac = 0.05
-    # #
-    # #    filename = ""
-    # #    for en in energy
-    # #        # Generate particle tree
-    # #        pnsPT = singleParticleTree(proton,en,rStart,outRadially,gpFrac)
-    # #
-    # #        # Plot trajectory
-    # #        pnsScene!(scene,pnsPT,filename)
-    # #    end
 
-    # # return scene
+    params_jansson = Bfield.janssonDict
+    println(params_jansson[:rdisklims][end])
+
+    # scene = Scene()
+    # proton = ParticleID(1,0,0)
+    # # energies at which to generate particles
+    # # energy = [0.01,0.1,1.0,10.0]*u"TeV"
+    # energy = 1.0u"GeV"
+    # # fire particles from different galactic radii
+    # rstart = 8.5u"kpc"
+    # # directions to fire particles (these will be normalized)
+    # outradially  = [-1.0,0.0,0.0]
+    # aim = Vector(outradially)
+
+    # gpfrac = 0.05
+
+    # pnsPT = singleParticleTree(proton,energy,rstart,aim,gpfrac)
+    # pnsScene!(scene,pnsPT)
+    # for en in energy
+    #     # Generate particle tree
+    #     pnsPT = singleParticleTree(proton,en,rStart,particleAim,gpFrac)
+
+    #     # Plot trajectory
+    #     pnsScene!(scene,pnsPT)
+    # end
+
+    # return scene
     # return particle
 
 end

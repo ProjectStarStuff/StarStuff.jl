@@ -1,177 +1,177 @@
 
 # DEFINE WIDGETS
-"""
-particle_wdg()
+# """
+# particle_wdg()
 
-Widget to get particle type. Returns Observable{ParticleID}
-"""
-function particle_wdg()
-    part_text = Interact.latex("\\text{\\textbf{Particle components}}")
-    el = Interact.spinbox(label="Electrons"; value=1)
-    pr = Interact.spinbox(label="Protons"; value=0)
-    nu = Interact.spinbox(label="Neutrons"; value=0)
+# Widget to get particle type. Returns Observable{ParticleID}
+# """
+# function particle_wdg()
+#     part_text = Interact.latex("\\text{\\textbf{Particle components}}")
+#     el = Interact.spinbox(label="Electrons"; value=1)
+#     pr = Interact.spinbox(label="Protons"; value=0)
+#     nu = Interact.spinbox(label="Neutrons"; value=0)
 
-    output = Interact.@map ParticleID(&pr,&nu,&el)
+#     output = Interact.@map ParticleID(&pr,&nu,&el)
 
-    wdg = Widget(["p"=>pr,"n"=>nu,"e"=>el],output = output)
-    part_components = Interact.hbox(pr,nu,el)
-    Interact.@layout! wdg Interact.vbox(part_text,part_components)
-end
-export particle_wdg
+#     wdg = Widget(["p"=>pr,"n"=>nu,"e"=>el],output = output)
+#     part_components = Interact.hbox(pr,nu,el)
+#     Interact.@layout! wdg Interact.vbox(part_text,part_components)
+# end
+# export particle_wdg
 
-"""
-position_wdg()
+# """
+# position_wdg()
 
-Widget to get position. Returns Observable{Array{Quantity{Length},1}}   
-"""
-function position_wdg()
-    # *** POSITION INPUT ***
-    dist_names = ["kpc","pc","km","m","cm"]
-    dist_objects = [1.0u"kpc",1.0u"pc",1.0u"km",1.0u"m",1.0u"cm",]
-    # use an OrderedDict to display desired units first
-    dist_dict = OrderedDict(zip(dist_names,dist_objects))
-    dist_wdg = Interact.dropdown(dist_names)
-    # Interact.@on println(&unit_wdg)
+# Widget to get position. Returns Observable{Array{Quantity{Length},1}}   
+# """
+# function position_wdg()
+#     # *** POSITION INPUT ***
+#     dist_names = ["kpc","pc","km","m","cm"]
+#     dist_objects = [1.0u"kpc",1.0u"pc",1.0u"km",1.0u"m",1.0u"cm",]
+#     # use an OrderedDict to display desired units first
+#     dist_dict = OrderedDict(zip(dist_names,dist_objects))
+#     dist_wdg = Interact.dropdown(dist_names)
+#     # Interact.@on println(&unit_wdg)
 
-    xstart = Interact.spinbox(label="X: "; value = -8.5)
-    xval = Interact.@map &xstart*dist_dict[&dist_wdg]
-    xdisp = Interact.hbox(xstart)
-    ystart = Interact.spinbox(label="Y: "; value = 0.0)
-    yval = Interact.@map &ystart*dist_dict[&dist_wdg]
-    ydisp = Interact.hbox(ystart)
-    zstart = Interact.spinbox(label="Z: "; value = 0.0)
-    zval = Interact.@map &zstart*dist_dict[&dist_wdg]
-    zdisp = Interact.hbox(zstart)
+#     xstart = Interact.spinbox(label="X: "; value = -8.5)
+#     xval = Interact.@map &xstart*dist_dict[&dist_wdg]
+#     xdisp = Interact.hbox(xstart)
+#     ystart = Interact.spinbox(label="Y: "; value = 0.0)
+#     yval = Interact.@map &ystart*dist_dict[&dist_wdg]
+#     ydisp = Interact.hbox(ystart)
+#     zstart = Interact.spinbox(label="Z: "; value = 0.0)
+#     zval = Interact.@map &zstart*dist_dict[&dist_wdg]
+#     zdisp = Interact.hbox(zstart)
 
-    output = Interact.@map Vector([&xval,&yval,&zval])
+#     output = Interact.@map Vector([&xval,&yval,&zval])
 
-    wdg = Widget(["x"=>xstart,"y"=>ystart,"z"=>zstart,"u"=>dist_wdg],output=output)
+#     wdg = Widget(["x"=>xstart,"y"=>ystart,"z"=>zstart,"u"=>dist_wdg],output=output)
 
-    dist_text = Interact.latex("\\text{\\textbf{Initial Position}}")
-    dist_utext = Interact.hbox(Interact.latex("\\text{Units: }"),dist_wdg)
-    Interact.@layout! wdg Interact.vbox(dist_text,dist_utext,xdisp,ydisp,zdisp)
-end
-export position_wdg
+#     dist_text = Interact.latex("\\text{\\textbf{Initial Position}}")
+#     dist_utext = Interact.hbox(Interact.latex("\\text{Units: }"),dist_wdg)
+#     Interact.@layout! wdg Interact.vbox(dist_text,dist_utext,xdisp,ydisp,zdisp)
+# end
+# export position_wdg
 
-"""
-energy_wdg()
+# """
+# energy_wdg()
 
-Widget to get energy. Returns Observable{Quantity{Energy}}
-"""
-function energy_wdg()
-    # unit input
-    enu_names = ["GeV","TeV","MeV","keV"]
-    enu_objects = [1.0u"GeV",1.0u"TeV",1.0u"MeV",1.0u"keV"]
-    enu_dict = OrderedDict(zip(enu_names,enu_objects))
-    enu_wdg = Interact.dropdown(enu_names)
-    enu_disp = Interact.@map Interact.latex("\\text{$(&enu_wdg)}")
-    # value input
-    enstart = Interact.spinbox(value = 1.0)
-    # combine unit and value
-    output = Interact.@map &enstart*enu_dict[&enu_wdg]
-    # define widget
-    wdg = Widget(["e"=>enstart,"u"=>enu_wdg],output=output)
-    # return widget layout
-    Interact.@layout! wdg Interact.hbox(latex("\\text{\\textbf{Energy = }}"),enstart,enu_wdg)
-end
-export energy_wdg
+# Widget to get energy. Returns Observable{Quantity{Energy}}
+# """
+# function energy_wdg()
+#     # unit input
+#     enu_names = ["GeV","TeV","MeV","keV"]
+#     enu_objects = [1.0u"GeV",1.0u"TeV",1.0u"MeV",1.0u"keV"]
+#     enu_dict = OrderedDict(zip(enu_names,enu_objects))
+#     enu_wdg = Interact.dropdown(enu_names)
+#     enu_disp = Interact.@map Interact.latex("\\text{$(&enu_wdg)}")
+#     # value input
+#     enstart = Interact.spinbox(value = 1.0)
+#     # combine unit and value
+#     output = Interact.@map &enstart*enu_dict[&enu_wdg]
+#     # define widget
+#     wdg = Widget(["e"=>enstart,"u"=>enu_wdg],output=output)
+#     # return widget layout
+#     Interact.@layout! wdg Interact.hbox(latex("\\text{\\textbf{Energy = }}"),enstart,enu_wdg)
+# end
+# export energy_wdg
 
-"""
-    direction_wdg()
+# """
+#     direction_wdg()
 
-Widget to get initial particle direction. Returns Observable{Array{Float64,1}}
-"""
-function direction_wdg()
-    text = Interact.latex("\\text{\\textbf{Initial Direction}}")
-    x = Interact.spinbox(label="X: ",value = 1.0)
-    y = Interact.spinbox(label="Y: ",value = 0.0)
-    z = Interact.spinbox(label="Z: ",value = 0.0)
-    output = Interact.@map Vector([&x,&y,&z])
+# Widget to get initial particle direction. Returns Observable{Array{Float64,1}}
+# """
+# function direction_wdg()
+#     text = Interact.latex("\\text{\\textbf{Initial Direction}}")
+#     x = Interact.spinbox(label="X: ",value = 1.0)
+#     y = Interact.spinbox(label="Y: ",value = 0.0)
+#     z = Interact.spinbox(label="Z: ",value = 0.0)
+#     output = Interact.@map Vector([&x,&y,&z])
 
-    wdg = Widget(["x"=>x,"y"=>y,"z"=>z], output = output)
+#     wdg = Widget(["x"=>x,"y"=>y,"z"=>z], output = output)
 
-    Interact.@layout! wdg Interact.vbox(text,x,y,z)    
-end
-export direction_wdg
+#     Interact.@layout! wdg Interact.vbox(text,x,y,z)    
+# end
+# export direction_wdg
 
-"""
-    manualdt_wdg()
+# """
+#     manualdt_wdg()
 
-Widget to manually set particle timestep. Returns Observable{Quantity{Time}}
-"""
-function manualdt_wdg()
-    # make dictionary for time and dt units
-    tu_names   = ["sec","min","hr","day","yr","kyr","Myr"]
-    tu_objects = [1.0u"s",1.0u"minute",1.0u"hr",1.0u"d",1.0u"yr",1.0u"kyr",1.0u"Myr"]
-    tu_dict    = OrderedDict(zip(tu_names,tu_objects))
+# Widget to manually set particle timestep. Returns Observable{Quantity{Time}}
+# """
+# function manualdt_wdg()
+#     # make dictionary for time and dt units
+#     tu_names   = ["sec","min","hr","day","yr","kyr","Myr"]
+#     tu_objects = [1.0u"s",1.0u"minute",1.0u"hr",1.0u"d",1.0u"yr",1.0u"kyr",1.0u"Myr"]
+#     tu_dict    = OrderedDict(zip(tu_names,tu_objects))
 
-    # make time and dt unit widgets
-    dtu = Interact.dropdown(tu_names)
+#     # make time and dt unit widgets
+#     dtu = Interact.dropdown(tu_names)
 
-    # make numerical input widgets for time and dt
-    dt = Interact.spinbox(value = 1.0)
+#     # make numerical input widgets for time and dt
+#     dt = Interact.spinbox(value = 1.0)
 
-    # bind units and values into quantities
-    output = Interact.@map &dt*tu_dict[&dtu]
+#     # bind units and values into quantities
+#     output = Interact.@map &dt*tu_dict[&dtu]
 
-    # construct widget
-    wdg = Widget(["dt"=>dt,"u"=>dtu], output = output)
+#     # construct widget
+#     wdg = Widget(["dt"=>dt,"u"=>dtu], output = output)
 
-    # join number and unit widgets together for display
-    dt_text = Interact.latex("\\text{\\textbf{Time Step}}")
-    dt_val  = Interact.hbox(dt,dtu)
-    Interact.@layout! wdg Interact.vbox(dt_text,dt_val)
-end
-export manualdt_wdg
+#     # join number and unit widgets together for display
+#     dt_text = Interact.latex("\\text{\\textbf{Time Step}}")
+#     dt_val  = Interact.hbox(dt,dtu)
+#     Interact.@layout! wdg Interact.vbox(dt_text,dt_val)
+# end
+# export manualdt_wdg
 
-"""
-    pt_manualdt_wdg()
+# """
+#     pt_manualdt_wdg()
 
-Widget to generate particles manual timestep. Returns Observable{ParticleTree}
-"""
-function pt_manualdt_wdg()
-    particle  = particle_wdg()
-    energy    = energy_wdg()
-    position  = position_wdg()
-    direction = direction_wdg()
-    dt        = manualdt_wdg()
+# Widget to generate particles manual timestep. Returns Observable{ParticleTree}
+# """
+# function pt_manualdt_wdg()
+#     particle  = particle_wdg()
+#     energy    = energy_wdg()
+#     position  = position_wdg()
+#     direction = direction_wdg()
+#     dt        = manualdt_wdg()
 
-    ptout = Observable{Any}(ParticleTree())
-    # ptnew  = Observable(ParticleTree())
+#     ptout = Observable{Any}(ParticleTree())
+#     # ptnew  = Observable(ParticleTree())
 
-    button_addpt = Interact.button("Add particle")
+#     button_addpt = Interact.button("Add particle")
 
-    ptnew = Interact.@map (&button_addpt; ParticleTree(particle[],energy[],position[],direction[],dt[]))
-    # output = Interact.@map (&button_addpt; ParticleTree(particle[],energy[],position[],direction[],dt[]))
+#     ptnew = Interact.@map (&button_addpt; ParticleTree(particle[],energy[],position[],direction[],dt[]))
+#     # output = Interact.@map (&button_addpt; ParticleTree(particle[],energy[],position[],direction[],dt[]))
 
-    Interact.@on begin
-        # println("output.nodes length = ",length(getproperty(output[],:nodes)))
-        push!(ptout[],&ptnew)
-        # println("output.nodes length = ",length(getproperty(output[],:nodes)))
-    end
+#     Interact.@on begin
+#         # println("output.nodes length = ",length(getproperty(output[],:nodes)))
+#         push!(ptout[],&ptnew)
+#         # println("output.nodes length = ",length(getproperty(output[],:nodes)))
+#     end
 
-    output = Interact.@map (&button_addpt,&ptout)
+#     output = Interact.@map (&button_addpt,&ptout)
 
-    wdg = Widget(["particle"=>particle,"energy"=>energy,"position"=>position,"direction"=>direction,"dt"=>dt,"addbutton"=>button_addpt], output = output)
+#     wdg = Widget(["particle"=>particle,"energy"=>energy,"position"=>position,"direction"=>direction,"dt"=>dt,"addbutton"=>button_addpt], output = output)
 
-    pos_dir = Interact.hbox(position,direction)
+#     pos_dir = Interact.hbox(position,direction)
 
-    Interact.@layout! wdg Interact.vbox(particle,
-                                        hline(),
-                                        energy,
-                                        hline(),
-                                        pos_dir,
-                                        hline(),
-                                        dt,
-                                        hline(),
-                                        button_addpt
-                                        )
-end
-export pt_manualdt_wdg
+#     Interact.@layout! wdg Interact.vbox(particle,
+#                                         hline(),
+#                                         energy,
+#                                         hline(),
+#                                         pos_dir,
+#                                         hline(),
+#                                         dt,
+#                                         hline(),
+#                                         button_addpt
+#                                         )
+# end
+# export pt_manualdt_wdg
 
-function pns_home_wdg()
+# function pns_home_wdg()
 
-end
+# end
 # END DEFINE WIDGETS
 ###############################################################################
 

@@ -282,8 +282,13 @@ function initParticles(particleTypes, energies, rStart, particleAim, gpFrac, bfi
                 vMag = vFromP(pMag,mass(p)) 
                 coordsVec = nothing
                 for d in particleAim
+                    println("Test 1")
                     pVec = usistrip(pMag)*d 
+                    println(d)
+                    println(pVec)
+                    println(rVec)
                     coords = Coords(ArrayPartition(rVec,pVec))	
+                    println(coords)
                     if coordsVec === nothing
                         coordsVec = Vector([coords]) 
                     else

@@ -56,6 +56,8 @@ end
 export dist
 
 """
+    PowerLaw
+
 Sampler for a power law distribution
 """
 struct PowerLaw <: Sampleable{Univariate, Continuous}
@@ -80,6 +82,8 @@ function Base.rand(rng::AbstractRNG,s::PowerLaw)
 end
 
 """
+    BrokenPowerLaw
+
 Sampler for a broken power law distribution
 """
 struct BrokenPowerLaw <: Sampleable{Univariate, Continuous}
@@ -110,6 +114,11 @@ function afterIndex(val,vec)
 	return 0
 end
 
+"""
+    rand(rng::AbstractRNG,s::BrokenPowerLaw)
+
+Generate one sample from a broken power law distribution.
+"""
 function Base.rand(rng::AbstractRNG,s::BrokenPowerLaw)
 	ξ = rand(rng)
 	γ = 1 .- s.α

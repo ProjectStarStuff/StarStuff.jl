@@ -26,7 +26,6 @@ function stepBoris(x, p, efield, bfield, q, m, dt)
     xnew = xnph + (dt / (2.0 * γnp1)) * unp1
     return ArrayPartition(xnew, pnew)
 end
-
 export stepBoris
 
 

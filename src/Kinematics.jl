@@ -24,6 +24,7 @@ function momentum(E::Quantity, id::ParticleID)
     return uconvert(u"GeV/c",√(E^2 - m^2 * Unitful.c^4) / Unitful.c)
 end #momentum
 
+
 """
 	function momentum(E::Quantity,m::Quantity)
 
@@ -35,17 +36,27 @@ function momentum(E::Quantity, m::Quantity)
     return uconvert(u"GeV/c",√(E^2 - m^2 * Unitful.c^4) / Unitful.c)
 end #momentum
 
+"""
+    function momentumsi(E::Float64,id::ParticleID)
+
+Returns momentum given total energy and a ParticleID. SI units used.
+"""
+function momentum_si(E::Float64, id::ParticleID)
+    m = usistrip(mass(id))
+    momentum_si(E,m)
+end #momentum
+
 
 """
 	function momentum(E::Number,m::Number)
 
 Returns momentum given total energy and rest mass in SI units.
 """
-function momentum(E::Number, m::Number)
+function momentum_si(E::Number, m::Number)
     return √(E^2 - m^2 * Unitful.c0.val^4) / Unitful.c0.val
 end #momentum
 
-export momentum
+export momentum, momentum_si
 #..oooOOO0Q0Q0OOOooo...oooOOO0Q0Q0OOOooo...oooOOO0Q0Q0OOOooo...oooOOO0Q0Q0OOOooo
 
 """

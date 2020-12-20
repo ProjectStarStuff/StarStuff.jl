@@ -3,7 +3,6 @@ Associated with various objects that contain constant particle properties
 """
 abstract type Particle end
 
-
 """
 ID cosmic ray by number of protons, neutrons, and electrons
 """
@@ -38,3 +37,14 @@ Base.:(==)(a::ParticleID, b::ParticleID) = (a.p == b.p && a.n == b.n && a.e == b
 Base.length(a::ParticleID) = 1 #defined for broadcasting purposes
 Base.iterate(a::ParticleID) = (a,nothing)
 export ParticleID, mass, charge
+
+
+particle_dict = Dict(
+                     "e-" => ParticleID(0,0,1),
+                     "e+" => ParticleID(0,0,-1),
+                     "p+" => ParticleID(1,0,0),
+                     "p-" => ParticleID(-1,0,0),
+                     "He+2" => ParticleID(2,2,0)
+                    )
+particle_keys = Vector(collect(keys(particle_dict))) 
+export particle_dict, particle_keys

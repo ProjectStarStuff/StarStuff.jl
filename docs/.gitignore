@@ -1,2 +1,2 @@
-# Leave out Documenter stuff
-build
+build/
+site/

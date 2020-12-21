@@ -1,25 +1,32 @@
+# Documentation: https://docs.travis-ci.com/user/languages/julia/
 language: julia
+
+os:
+  - linux
+  # - osx
 
 julia:
   - 1.5
-  
-os:
-  - linux
-  - osx
-  - windows
-
-before_install:
-  - if [ $TRAVIS_OS_NAME = linux ]; then sudo apt-get update; fi
-  - if [ $TRAVIS_OS_NAME = linux ]; then sudo apt-get upgrade -y; fi
-  - if [ $TRAVIS_OS_NAME = linux ]; then sudo apt-get install build-essential -y; fi
-  - if [ $TRAVIS_OS_NAME = linux ]; then sudo apt-get install -y cmake mesa-utils; fi
-  - if [ $TRAVIS_OS_NAME = linux ]; then sudo apt-get install -y libxrandr-dev libxinerama-dev libxcursor-dev mesa-utils; fi
-  - if [ $TRAVIS_OS_NAME = linux ]; then sudo apt-get install -y ffmpeg; fi
-  # - if [ $TRAVIS_OS_NAME = linux ]; ENV["DISPLAY"] = ":0"; fi
+  # - 1 # uncomment when 1.6 is out
+  # - nightly
 
 notifications:
-  email:
-    - nwgreen@umich.edu
+  email: false
+
+before_install:
+  - sudo apt-get update
+  - sudo apt-get upgrade -y
+  - sudo apt-get install build-essential -y
+  - sudo apt-get install -y cmake mesa-utils
+  - sudo apt-get install -y libxrandr-dev libxinerama-dev libxcursor-dev mesa-utils
+  - sudo apt-get install -y ffmpeg
+  # - if [ $TRAVIS_OS_NAME = linux ]; then sudo apt-get update; fi
+  # - if [ $TRAVIS_OS_NAME = linux ]; then sudo apt-get upgrade -y; fi
+  # - if [ $TRAVIS_OS_NAME = linux ]; then sudo apt-get install build-essential -y; fi
+  # - if [ $TRAVIS_OS_NAME = linux ]; then sudo apt-get install -y cmake mesa-utils; fi
+  # - if [ $TRAVIS_OS_NAME = linux ]; then sudo apt-get install -y libxrandr-dev libxinerama-dev libxcursor-dev mesa-utils; fi
+  # - if [ $TRAVIS_OS_NAME = linux ]; then sudo apt-get install -y ffmpeg; fi
+  # - if [ $TRAVIS_OS_NAME = linux ]; ENV["DISPLAY"] = ":0"; fi
 
 jobs:
   include:
@@ -32,4 +39,9 @@ jobs:
         - julia --project=docs/ docs/make.jl
       after_success: skip
 
+  # allow_failures:
+  #   - julia: nightly
 
+## uncomment the following lines to override the default test script
+script:
+ - julia --color=yes -e 'using Pkg; Pkg.activate(); Pkg.instantiate(); Pkg.test()'
